@@ -4,7 +4,7 @@
 * Extract characters from detected license plate(s).
 
 ## How to inference
-You can run the Python file with the following code
+First of all, make sure that you have installed all requirements. Then, to inference, you can run the Python file with the following code
 
 ```
 python detect.py \
