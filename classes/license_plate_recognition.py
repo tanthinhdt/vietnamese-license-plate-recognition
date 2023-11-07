@@ -114,11 +114,11 @@ class LicensePlateRecognition(BaseModel):
             )
 
             license = ""
-            flag = False
-            for change_constant in range(2):
+            is_recognized = False
+            for enhancement in range(4):
                 for center_threshold in range(2):
                     license = self.ocr.inference(
-                        deskew(cropped_image, change_constant, center_threshold)
+                        deskew(cropped_image, enhancement, center_threshold)
                     )
                     if license is not None:
                         image = cv2.putText(
@@ -130,8 +130,8 @@ class LicensePlateRecognition(BaseModel):
                             color=(36, 255, 12),
                             thickness=2,
                         )
-                        flag = True
+                        is_recognized = True
                         break
-                if flag:
+                if is_recognized:
                     break
         return image

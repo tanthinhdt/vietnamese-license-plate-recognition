@@ -21,6 +21,20 @@ def change_contrast_clahe(image: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
 
 
+def sharpen_details(image: np.ndarray) -> np.ndarray:
+    """
+    Sharpen the details of the image.
+    :param image:   The image to sharpen.
+    :return:        The image with sharpened details.
+    """
+    kernel = np.array([
+        [-1, -1, -1],
+        [-1,  8.5, -1],
+        [-1, -1, -1]
+    ])
+    return cv2.filter2D(image, -1, kernel)
+
+
 def rotate_image(image: np.ndarray, angle: float) -> np.ndarray:
     """
     Rotate the image.
@@ -96,16 +110,24 @@ def compute_skewness(image: np.ndarray, center_threshold: int) -> float:
     return (angle / cnt) * (180 / math.pi)
 
 
-def deskew(image: np.ndarray, change_constant: int, center_threshold: int) -> np.ndarray:
+def deskew(image: np.ndarray, enhancement: int, center_threshold: int) -> np.ndarray:
     """
     Deskew the image.
     :param image:               The image to deskew.
-    :param change_constant:     Whether to change the contrast of the image.
+    :param enhancement:         Which enhance function to use.
     :param center_threshold:    Whether to exclude the center of the image.
     :return:                    The deskewed image.
     """
-    image = change_contrast_clahe(image) if change_constant == 1 else image
-    return rotate_image(image, compute_skewness(image, center_threshold))
+    enhance_functions = {
+        0: lambda image: image,
+        1: change_contrast_clahe,
+        2: sharpen_details,
+        3: lambda image: change_contrast_clahe(sharpen_details(image))
+    }
+    return rotate_image(
+        enhance_functions[enhancement](image),
+        compute_skewness(image, center_threshold)
+    )
 
 
 def get_frames(cap: cv2.VideoCapture) -> np.ndarray:
