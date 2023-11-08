@@ -32,7 +32,9 @@ bash detect_realtime.sh
 ![alt text](out/images/5.jpg)
 
 ## Challenges
-### Too bright
+### Cannot OCR on blue license plates because the model was not trained for this case.
 ![alt text](out/images/2.jpg)
-### Blurry
 ![alt text](out/images/8.jpg)
+
+## Refereces
+https://github.com/trungdinh22/License-Plate-Recognition
