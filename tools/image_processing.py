@@ -3,6 +3,107 @@ import math
 import numpy as np
 
 
+def change_contrast_fuzzy(image: np.ndarray) -> np.ndarray:
+    """
+    Change the contrast of the image with fuzzy logic.
+    :param image:   The image to enhance the contrast.
+    :return:        The image with enhanced contrast.
+    """
+    # Gaussian Function:
+    def Gaussian(x, mean, std):
+        return np.exp(-0.5 * np.square((x-mean) / std))
+
+    # Membership Functions:
+    def ExtremelyDark(x, M):
+        return Gaussian(x, -50, M/6)
+
+    def VeryDark(x, M):
+        return Gaussian(x, 0, M/6)
+
+    def Dark(x, M):
+        return Gaussian(x, M/2, M/6)
+
+    def SlightlyDark(x, M):
+        return Gaussian(x, 5*M/6, M/6)
+
+    def SlightlyBright(x, M):
+        return Gaussian(x, M+(255-M)/6, (255-M)/6)
+
+    def Bright(x, M):
+        return Gaussian(x, M+(255-M)/2, (255-M)/6)
+
+    def VeryBright(x, M):
+        return Gaussian(x, 255, (255-M)/6)
+
+    def ExtremelyBright(x, M):
+        return Gaussian(x, 305, (255-M)/6)
+
+    def OutputFuzzySet(x, f, M, thres):
+        x = np.array(x)
+        result = f(x, M)
+        result[result > thres] = thres
+        return result
+
+    def AggregateFuzzySets(fuzzy_sets):
+        return np.max(np.stack(fuzzy_sets), axis=0)
+
+    def Infer(i, M, get_fuzzy_set=False):
+        # Calculate degree of membership for each class
+        VD = VeryDark(i, M)
+        Da = Dark(i, M)
+        SD = SlightlyDark(i, M)
+        SB = SlightlyBright(i, M)
+        Br = Bright(i, M)
+        VB = VeryBright(i, M)
+
+        # Fuzzy Inference:
+        x = np.arange(-50, 306)
+        Inferences = (
+            OutputFuzzySet(x, ExtremelyDark, M, VD),
+            OutputFuzzySet(x, VeryDark, M, Da),
+            OutputFuzzySet(x, Dark, M, SD),
+            OutputFuzzySet(x, Bright, M, SB),
+            OutputFuzzySet(x, VeryBright, M, Br),
+            OutputFuzzySet(x, ExtremelyBright, M, VB)
+        )
+
+        # Calculate AggregatedFuzzySet:
+        fuzzy_output = AggregateFuzzySets(Inferences)
+
+        # Calculate crisp value of centroid
+        if get_fuzzy_set:
+            return np.average(x, weights=fuzzy_output), fuzzy_output
+        return np.average(x, weights=fuzzy_output)
+
+    # Convert RGB to LAB
+    lab_image = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+
+    # Get L channel
+    l_channel = lab_image[:, :, 0]
+
+    # Calculate M value
+    M = np.mean(l_channel)
+    if M < 128:
+        M = 127 - (127 - M)/2
+    else:
+        M = 128 + M/2
+
+    # Precompute the fuzzy transform
+    x = list(range(-50, 306))
+    FuzzyTransform = dict(zip(x, [Infer(np.array([i]), M) for i in x]))
+
+    # Apply the transform to l channel
+    u, inv = np.unique(l_channel, return_inverse=True)
+    l_channel = np.array([FuzzyTransform[i] for i in u])[inv].reshape(l_channel.shape)
+
+    # Min-max scale the output L channel to fit (0, 255):
+    Min = np.min(l_channel)
+    Max = np.max(l_channel)
+    lab_image[:, :, 0] = (l_channel - Min)/(Max - Min) * 255
+
+    return cv2.cvtColor(lab_image, cv2.COLOR_LAB2RGB)
+
+
 def change_contrast_clahe(image: np.ndarray) -> np.ndarray:
     """
     Change the contrast of the image with CLAHE.
