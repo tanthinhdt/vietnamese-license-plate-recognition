@@ -32,9 +32,16 @@ bash detect_realtime.sh
 ![alt text](out/images/5.jpg)
 
 ## Challenges
-### Cannot OCR on blue license plates because the model was not trained for this case.
+Cannot detect or OCR on license plates in the environment that:
+* Too bright
 ![alt text](out/images/2.jpg)
+* Too blurry
+![alt text](out/images/blur.jpg)
+* License plates with characters that are not black (because the OCR model was not trained for these cases)
 ![alt text](out/images/8.jpg)
+* License plates that are too small
+![alt text](out/images/557.jpg)
 
 ## Refereces
 https://github.com/trungdinh22/License-Plate-Recognition
+https://github.com/WaseemKn/FuzzyColorImageEnhancement-FuzzyLogicCourse-ITE5thYear
