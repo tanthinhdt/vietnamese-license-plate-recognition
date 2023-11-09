@@ -1,6 +1,7 @@
 import os
 import glob
 import argparse
+from tqdm import tqdm
 from classes import LicensePlateRecognition
 
 
@@ -43,7 +44,8 @@ def main(args: argparse.Namespace) -> None:
     if args.modality == "realtime":
         model.inference(args.modality)
     elif os.path.isdir(args.src):
-        for file_path in glob.glob(args.src + "/*"):
+        file_paths = glob.glob(args.src + "/*")
+        for file_path in tqdm(file_paths, desc="Inference", total=len(file_paths)):
             output_path = os.path.join(args.out, os.path.basename(file_path))
             model.inference(args.modality, file_path, output_path)
     else:
